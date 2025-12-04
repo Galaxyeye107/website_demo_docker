@@ -1,0 +1,28 @@
+name: DevSecOps Pipeline
+
+# Khi nào thì chạy? -> Khi có code push lên nhánh main
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-and-scan:
+    runs-on: ubuntu-latest # Thuê một máy chủ Ubuntu của GitHub để chạy
+    steps:
+      # Bước 1: Lấy code về
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Bước 2: Nấu bánh (Build Docker Image)
+      - name: Build Docker Image
+        run: docker build -t website_v3 .
+
+      # Bước 3: Quét bảo mật bằng Trivy
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'website_v3'
+          format: 'table'
+          exit-code: '1' # Nếu phát hiện lỗi nghiêm trọng, báo đỏ (thất bại) ngay
+          ignore-unfixed: true
+          severity: 'CRITICAL,HIGH'
